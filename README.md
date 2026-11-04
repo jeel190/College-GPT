@@ -1,156 +1,117 @@
-# 🎓 College GPT — Intelligent Campus Knowledge Assistant
-> **Capstone Project**: Production-Grade Retrieval-Augmented Generation (RAG) Architecture for Academic Institutions.
-> Exclusively powered by **Google AI Studio (Gemini)** with zero-cost browser-stored conversation history.
+# 🎓 College GPT — Academic Knowledge Assistant
 
-College GPT is an advanced AI campus assistant designed to eliminate information fragmentation in universities and colleges. By ingesting complex academic documents—including syllabus outlines, attendance regulations, examination schedules, grading policies, and campus hostel manuals—College GPT enables students and faculty to retrieve accurate, verified answers backed by **exact document and page-level source citations**.
-
----
-
-## 🏛️ Project Highlights & Key Features
-
-- **💎 Minimalist "PREMIUM VERSION" UI**:
-  - Deep Indigo & Slate glassmorphic design system without noisy buttons.
-  - Interactive Light / Dark theme toggle with persistence.
-  - **Browser-Stored Chat History**: View and resume past conversations anytime, saved automatically in your browser's `localStorage` with zero cloud fees or database costs!
-  - Collapsible **Verified Citation Cards**: Click on any document badge to view the exact quoted excerpt and similarity score.
-  - Built-in **Text-to-Speech (Audio Readout)** and one-click copy.
-  - Interactive Capstone Architecture Explainer modal for presentations and viva exams.
-
-- **📚 Dual-Source Academic Knowledge Base**:
-  - **Inbuilt Knowledge Base**: Comes preloaded with Bangalore University BCA Third Year Course Outline, Weekly Timetable, Exam Planner, Attendance Policies, and Campus & Hostel Rules.
-  - **Dynamic Ingestion (PDF & Word Docs ONLY)**: Drag-and-drop or attach any `.pdf`, `.docx`, or `.doc` file directly in the chat or sidebar. It is parsed, chunked, and vector-indexed immediately without restarting the application!
-
-- **⚡ Production RAG Pipeline (ChromaDB + Dense Embeddings)**:
-  - Local ONNX `all-MiniLM-L6-v2` dense embeddings (384 dimensions) requiring zero cloud subscriptions for vectorization.
-  - Persistent ChromaDB vector database with real-time add, query, and delete operations.
-  - Cosine distance metric for targeted semantic retrieval.
-
-- **🤖 Google AI Studio (Gemini) Integration**:
-  - Powered by **Google AI Studio (`gemini-1.5-flash`)** — generous 100% free tier.
-  - Targeted Answers: Specifically answers what is asked (e.g. asking for Tuesday's timetable outputs only Tuesday, not the whole week).
-  - **Offline RAG Extractor Mode**: Runs 100% locally even before adding an API key, ensuring you can test and demonstrate the system offline anytime!
+> An intelligent, AI-powered Retrieval-Augmented Generation (RAG) assistant designed for college students and faculty.  
+> Powered by **Google AI Studio (Gemini)** with fast local vector search and zero-cost browser chat history.
 
 ---
 
-## 📐 Capstone RAG Model Architecture
+## 📌 Overview
+
+**College GPT** solves information fragmentation in academic institutions. Instead of manually searching through lengthy syllabus PDFs, circulars, or timetable spreadsheets, students and faculty can ask direct questions and receive fast, accurate answers.
+
+### ✨ Key Capabilities
+
+- **🎯 Targeted Answers**: Extracts and presents strictly what was asked (e.g., asking for Tuesday's timetable returns only Tuesday's schedule).
+- **🔤 Typo & Spelling Tolerance**: Understands student shorthand and spelling variations (e.g., `jango` $\rightarrow$ `Django`, `postgre` $\rightarrow$ `PostgreSQL`, `timetbl` $\rightarrow$ `timetable`).
+- **🛡️ Out-of-Syllabus Grounding**: If a question is outside the course documents or campus notices, it cleanly clarifies:
+  > *"I do not have information regarding the question asked in the college documents."*
+- **📎 In-Chat Document Upload**: Attach departmental PDFs and Word documents (`.pdf`, `.docx`, `.doc`) directly at the chat bar. Newly uploaded files are parsed, chunked, and indexed into the vector store in real time.
+- **💬 Browser-Stored Chat History**: Conversations are saved locally in the browser (`localStorage`), allowing you to review past chats without external database or cloud storage costs.
+- **⚡ Local Dense Vector Search**: High-performance semantic retrieval using ChromaDB and ONNX embeddings (`all-MiniLM-L6-v2`).
+- **🤖 Powered by Google AI Studio**: Backed by Google's Gemini models for rapid, context-grounded reasoning.
+
+---
+
+## 🏛️ System Architecture
 
 ```mermaid
-flowchart TD
-    subgraph INGESTION["1. Document Ingestion Layer"]
-        D1["Inbuilt PDFs & Word Docs"] --> P["Document Processor"]
-        D2["User Uploads (.pdf, .docx, .doc ONLY)"] --> P
-    end
+flowchart LR
+    A["Academic Documents (.pdf, .docx)"] --> B["Document Processor & Chunker"]
+    B --> C["Dense Embeddings (MiniLM-L6-v2)"]
+    C --> D[("ChromaDB Vector Store")]
 
-    subgraph CHUNKING["2. Chunking & Metadata Layer"]
-        P --> CS["Recursive Character Text Splitter"]
-        CS -->|"Chunk Size: 750 | Overlap: 120"| CK["Enriched Chunks (Source, Page, Type)"]
-    end
-
-    subgraph EMBEDDING["3. Dense Vector Embeddings"]
-        CK --> EMB["ONNX all-MiniLM-L6-v2 (384-d)"]
-        EMB --> VDB[("ChromaDB Vector Store")]
-    end
-
-    subgraph RETRIEVAL["4. Semantic Retrieval"]
-        UQ["Student Query"] --> QEMB["Query Embedder"]
-        QEMB --> VDB
-        VDB -->|"Cosine Distance Top-k"| REL["Targeted Passages + Citations"]
-    end
-
-    subgraph SYNTHESIS["5. Augmented Prompt & Generation"]
-        REL --> PROMPT["Precision Grounding Prompt"]
-        UQ --> PROMPT
-        PROMPT --> LLM["Google AI Studio (Gemini)"]
-        LLM --> RESP["Precise Answer with Source Citations"]
-    end
+    E["User Question"] --> F["Semantic Search"]
+    D --> F
+    F --> G["Context Assembly"]
+    G --> H["Google AI Studio (Gemini)"]
+    H --> I["Targeted Answer"]
 ```
 
 ---
 
-## 📂 Project Directory Structure
+## 📂 Project Structure
 
 ```text
 CollegeGPT/
-├── app.py                      # Flask REST API server and routing
-├── run_college_gpt.bat         # 1-Click Windows execution launcher
-├── open_env.bat                # 1-Click Notepad opener for .env API key
+├── app.py                      # Flask application and REST endpoints
+├── run_college_gpt.bat         # 1-Click launcher for Windows
+├── open_env.bat                # Quick shortcut to configure .env
 ├── requirements.txt            # Python dependencies
-├── .env.example                # Environment configuration template
-├── .env                        # Active Google AI Studio API key
-├── chroma_db/                  # Persistent ChromaDB vector database
+├── Procfile                    # Render process file
+├── render.yaml                 # Render deployment blueprint
+├── .env.example                # Sample environment variables
 ├── data/
-│   ├── inbuilt/                # Preloaded official college documents
-│   │   ├── 01_BCA_Third_Year_Course_Outline.pdf
-│   │   ├── 02_BCA_Third_Year_Weekly_Timetable.pdf
-│   │   ├── 03_BCA_Third_Year_Exam_Schedule_Planner.pdf
-│   │   ├── 04_BCA_Third_Year_Attendance_Policy.pdf
-│   │   └── 05_College_Hostel_and_Campus_Rules.docx
-│   └── uploads/                # User uploaded PDFs and Word documents
+│   ├── inbuilt/                # Default academic curriculum & policies
+│   └── uploads/                # User-attached PDFs and Word files
+├── chroma_db/                  # Persistent ChromaDB vector database
 ├── src/
-│   ├── document_processor.py   # PDF & Word text extraction and chunker
-│   ├── vector_store.py         # ChromaDB interface and vector indexer
-│   ├── llm_client.py           # Google AI Studio API connector & targeted extractor
-│   ├── prompt.py               # Precision grounding prompt templates
-│   └── rag_pipeline.py         # End-to-end RAG orchestrator
+│   ├── document_processor.py   # PDF and Word document extraction
+│   ├── vector_store.py         # ChromaDB indexing & semantic query
+│   ├── llm_client.py           # Google AI Studio Gemini integration
+│   ├── prompt.py               # Grounded academic prompts
+│   └── rag_pipeline.py         # Complete RAG inference workflow
 ├── static/
 │   ├── css/
-│   │   └── premium.css         # Luxury glassmorphism design system
+│   │   └── premium.css         # Modern, clean UI styling
 │   └── js/
-│       └── app.js              # Real-time chat, browser chat history & citations
+│       └── app.js              # Real-time chat & local storage history
 └── templates/
-    └── index.html              # Minimalist, responsive single-page application
+    └── index.html              # Main chat interface
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Running Locally
 
-### 1. Launching the Application
-Double-click:
-```bash
-run_college_gpt.bat
-```
-Open your browser and navigate to:
-```
-http://localhost:8080
-```
+### Prerequisites
+- Python 3.10 or higher installed on your computer.
 
-### 2. Adding your Google AI Studio API Key
-1. Double click `open_env.bat` to open `.env` in Notepad.
-2. Paste your free key from [Google AI Studio](https://aistudio.google.com/app/apikey):
-   ```env
-   GEMINI_API_KEY=AIzaSy...
+### Quick Start (Windows)
+1. Double-click **`run_college_gpt.bat`** (or run `python app.py` in your terminal).
+2. Open your web browser and navigate to:
    ```
-3. Save (`Ctrl + S`). The app automatically picks up the key!
+   http://localhost:8080
+   ```
+
+### Configuring Google AI Studio API Key
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Open `.env` (or double-click `open_env.bat`) and paste your key:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+3. Save the file. The server automatically detects your key without restarting.
 
 ---
 
-## 🌐 Cloud Deployment Guide
+## ☁️ Deployment on Render
 
-### Option 1: Deploy on Render (Recommended)
-1. Fork or push this repository to your GitHub account (`https://github.com/jeel190/College-GPT`).
-2. Log in to [Render](https://render.com).
-3. Click **New +** $\rightarrow$ **Web Service**.
-4. Connect your `College-GPT` GitHub repository.
-5. Configure the service:
+This project is pre-configured for simple hosting on [Render](https://render.com):
+
+1. Push your code to your GitHub repository:
+   ```bash
+   git push origin main
+   ```
+2. Log in to your [Render Dashboard](https://dashboard.render.com/).
+3. Click **New +** $\rightarrow$ **Web Service** and connect your `College-GPT` repository.
+4. Render will automatically detect the project configuration from `render.yaml` and `Procfile`:
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn -w 2 -b 0.0.0.0:$PORT app:app`
-6. Under **Environment Variables**, add:
-   - `GEMINI_API_KEY`: Your Google AI Studio API Key
-   - `DEFAULT_LLM_PROVIDER`: `gemini`
-   - `GEMINI_MODEL`: `gemini-3.5-flash`
-7. Click **Create Web Service**. Your app is live!
-
-### Option 2: Deploy on Vercel
-1. Install Vercel CLI or import repository at [vercel.com](https://vercel.com).
-2. Set Environment Variables in Project Settings:
-   - `GEMINI_API_KEY`: Your Google AI Studio API Key
-   - `DEFAULT_LLM_PROVIDER`: `gemini`
-   - `GEMINI_MODEL`: `gemini-3.5-flash`
-3. Deploy! Vercel automatically detects `vercel.json` and runs the Flask app serverless.
+5. Under **Environment Variables**, add:
+   - `GEMINI_API_KEY` = *(your Google AI Studio API key)*
+6. Click **Deploy Web Service**. Your College GPT instance will be live on the web!
 
 ---
 
-## 📜 License
-Developed for Academic & Capstone Research. MIT License.
+## 📄 License
+This project is open-source and created for academic and research purposes.
