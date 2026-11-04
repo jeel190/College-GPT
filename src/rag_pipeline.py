@@ -47,13 +47,14 @@ class CollegeRAGPipeline:
         self.vector_store = CollegeVectorStore(persist_dir=self.persist_dir)
         self.llm_client = CollegeLLMClient()
 
-        # Automatic cold-start indexing for Render cloud & fresh deployments
+        # Non-blocking startup: never block web worker or port binding on Render
         try:
             if self.vector_store.collection.count() == 0:
-                print("[College GPT] ChromaDB is empty on startup. Auto-indexing knowledge base...")
-                self.index_all_documents()
+                print("[College GPT] ChromaDB is empty on startup. Launching background indexer...", flush=True)
+                import threading
+                threading.Thread(target=self.index_all_documents, daemon=True).start()
         except Exception as e:
-            print(f"[College GPT] Startup auto-index warning: {e}")
+            print(f"[College GPT] Startup check note: {e}", flush=True)
 
     def index_all_documents(self) -> Dict[str, Any]:
         """

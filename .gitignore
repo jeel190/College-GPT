@@ -20,9 +20,6 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Local ChromaDB Vector Store
-chroma_db/
-
 # Uploads directory contents (keeps the folder with .gitkeep)
 data/uploads/*
 !data/uploads/.gitkeep
