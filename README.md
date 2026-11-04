@@ -106,7 +106,7 @@ This project is pre-configured for simple hosting on [Render](https://render.com
 4. Render will automatically detect the project configuration from `render.yaml` and `Procfile`:
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn -w 2 -b 0.0.0.0:$PORT app:app`
+   - **Start Command**: `gunicorn -w 1 --threads 4 -b 0.0.0.0:$PORT app:app`
 5. Under **Environment Variables**, add:
    - `GEMINI_API_KEY` = *(your Google AI Studio API key)*
 6. Click **Deploy Web Service**. Your College GPT instance will be live on the web!
