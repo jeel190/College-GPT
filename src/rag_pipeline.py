@@ -47,14 +47,21 @@ class CollegeRAGPipeline:
         self.vector_store = CollegeVectorStore(persist_dir=self.persist_dir)
         self.llm_client = CollegeLLMClient()
 
-        # Non-blocking startup: never block web worker or port binding on Render
-        try:
-            if self.vector_store.collection.count() == 0:
-                print("[College GPT] ChromaDB is empty on startup. Launching background indexer...", flush=True)
-                import threading
-                threading.Thread(target=self.index_all_documents, daemon=True).start()
-        except Exception as e:
-            print(f"[College GPT] Startup check note: {e}", flush=True)
+        # Non-blocking background warmup for embedding model and index
+        def _background_init():
+            try:
+                import chromadb.utils.embedding_functions as ef
+                warmup_fn = ef.DefaultEmbeddingFunction()
+                warmup_fn(["warmup"])
+                print("[College GPT] Embedding model is ready in cache.", flush=True)
+                if self.vector_store.collection.count() == 0:
+                    print("[College GPT] ChromaDB is empty on startup. Indexing knowledge base...", flush=True)
+                    self.index_all_documents()
+            except Exception as e:
+                print(f"[College GPT] Background warmup note: {e}", flush=True)
+
+        import threading
+        threading.Thread(target=_background_init, daemon=True).start()
 
     def index_all_documents(self) -> Dict[str, Any]:
         """
