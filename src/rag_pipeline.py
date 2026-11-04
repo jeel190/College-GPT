@@ -47,6 +47,14 @@ class CollegeRAGPipeline:
         self.vector_store = CollegeVectorStore(persist_dir=self.persist_dir)
         self.llm_client = CollegeLLMClient()
 
+        # Automatic cold-start indexing for Render cloud & fresh deployments
+        try:
+            if self.vector_store.collection.count() == 0:
+                print("[College GPT] ChromaDB is empty on startup. Auto-indexing knowledge base...")
+                self.index_all_documents()
+        except Exception as e:
+            print(f"[College GPT] Startup auto-index warning: {e}")
+
     def index_all_documents(self) -> Dict[str, Any]:
         """
         Indexes all files in data/inbuilt and data/uploads.
