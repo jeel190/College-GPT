@@ -564,10 +564,21 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: text }),
       });
-      const data = await res.json();
+
+      let data = null;
+      const rawText = await res.text().catch(() => "");
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch (jsonErr) {
+        if (!rawText || res.status === 502 || res.status === 504) {
+          throw new Error("Server was restarting or waking up. Please ask again.");
+        }
+        throw new Error(rawText.slice(0, 100));
+      }
+
       removeTypingIndicator(typingId);
 
-      if (data.success) {
+      if (data && data.success) {
         appendMessageToDom("assistant", data.answer, data.sources || [], data.provider);
         session.messages.push({
           role: "assistant",
@@ -577,14 +588,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         saveSessionsToStorage();
       } else {
-        const errMsg = `⚠️ **Error:** ${data.error || "An error occurred while retrieving answers."}`;
+        const errMsg = `⚠️ **Notice:** ${(data && data.error) || "Unable to retrieve information. Please try again."}`;
         appendMessageToDom("assistant", errMsg);
         session.messages.push({ role: "assistant", text: errMsg, sources: [], provider: "" });
         saveSessionsToStorage();
       }
     } catch (err) {
       removeTypingIndicator(typingId);
-      const netMsg = `⚠️ **Network Error:** Could not contact College GPT server. (${err.message})`;
+      const netMsg = `⚠️ ${err.message || "Connection interrupted. Please ask your question again."}`;
       appendMessageToDom("assistant", netMsg);
       session.messages.push({ role: "assistant", text: netMsg, sources: [], provider: "" });
       saveSessionsToStorage();
