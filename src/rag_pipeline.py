@@ -177,11 +177,15 @@ class CollegeRAGPipeline:
             custom_provider=provider
         )
 
+        # If answer indicates out-of-syllabus, clear any irrelevant retrieved sources
+        if "I do not have information regarding the question asked" in answer:
+            sources = []
+
         return {
             "answer": answer,
             "sources": sources,
             "provider": provider_used,
-            "chunks_retrieved": len(retrieved_chunks)
+            "chunks_retrieved": len(retrieved_chunks) if sources else 0
         }
 
     def get_status(self) -> Dict[str, Any]:

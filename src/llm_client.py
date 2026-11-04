@@ -56,7 +56,7 @@ class CollegeLLMClient:
                         pass
 
         self.gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-        self.model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
+        self.model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
 
     def get_active_provider(self) -> str:
         """Returns current status of Google AI Studio provider."""
@@ -108,11 +108,12 @@ class CollegeLLMClient:
         """Call to Google AI Studio Generative Language REST API using requests with multi-model fallback."""
         models_to_try = [
             self.model,
-            "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
             "gemini-3.1-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash",
             "gemini-3.6-flash",
-            "gemini-3.7-flash",
+            "gemini-3.8-flash",
             "gemini-flash-latest"
         ]
         unique_models = list(dict.fromkeys(m for m in models_to_try if m))
@@ -197,8 +198,14 @@ class CollegeLLMClient:
                         )
 
         # 2. Specific topic matching: search lines across ALL retrieved chunks
-        stop_words = {"what", "is", "the", "are", "of", "in", "for", "a", "an", "and", "or", "to", "how", "do", "does", "can", "tell", "me", "give", "show", "plan", "work"}
-        q_raw_words = [w for w in re.findall(r"\w+", q_lower) if w not in stop_words and len(w) > 1]
+        stop_words = {
+            "what", "is", "the", "are", "of", "in", "for", "a", "an", "and", "or",
+            "to", "how", "do", "does", "can", "tell", "me", "give", "show", "plan",
+            "work", "explain", "about", "who", "which", "when", "where", "why",
+            "would", "should", "could", "any", "some", "my", "your", "our", "their",
+            "this", "that", "these", "those", "i", "you", "he", "she", "it", "we", "they"
+        }
+        q_raw_words = [w for w in re.findall(r"[a-z0-9]+", q_lower) if w not in stop_words and len(w) > 2]
 
         # Expand with typo map
         q_words = set(q_raw_words)
@@ -206,14 +213,17 @@ class CollegeLLMClient:
             if w in COMMON_TYPO_MAP:
                 q_words.add(COMMON_TYPO_MAP[w])
 
+        if not q_words:
+            return "I do not have information regarding the question asked in the college documents."
+
         matched_lines = []
         for chunk in chunks:
             text = chunk.get("text", "")
             lines = [l.strip() for l in text.split("\n") if l.strip()]
             for i, line in enumerate(lines):
                 line_lower = line.lower()
-                # Check for significant keyword match
-                match_count = sum(1 for qw in q_words if qw in line_lower)
+                # Strict whole word match using word boundaries
+                match_count = sum(1 for qw in q_words if re.search(rf"\b{re.escape(qw)}\b", line_lower))
                 if match_count > 0:
                     matched_lines = lines[i : min(i + 5, len(lines))]
                     break
