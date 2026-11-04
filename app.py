@@ -106,15 +106,22 @@ def chat():
         return jsonify({"success": False, "error": "Please enter a valid question."}), 400
 
     try:
-        response = pipeline.query(question=question, n_results=5, provider=provider)
+        response = pipeline.query(question=question, n_results=4, provider=provider)
+        if "error" in response and not response.get("answer"):
+            return jsonify({
+                "success": False,
+                "error": response["error"]
+            }), 400
+
         return jsonify({
             "success": True,
-            "answer": response["answer"],
-            "sources": response["sources"],
-            "provider": response["provider"],
-            "chunks_retrieved": response["chunks_retrieved"]
+            "answer": response.get("answer", "I do not have information regarding the question asked in the college documents."),
+            "sources": response.get("sources", []),
+            "provider": response.get("provider", "College GPT"),
+            "chunks_retrieved": response.get("chunks_retrieved", 0)
         })
     except Exception as e:
+        print(f"[College GPT Error in /api/chat]: {e}", flush=True)
         return jsonify({
             "success": False,
             "error": f"Error generating answer: {str(e)}"

@@ -9,3 +9,5 @@ services:
         sync: false
       - key: DEFAULT_LLM_PROVIDER
         value: gemini
+      - key: PYTHONUNBUFFERED
+        value: "1"

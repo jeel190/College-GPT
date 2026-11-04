@@ -565,20 +565,19 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ question: text }),
       });
 
-      let data = null;
       const rawText = await res.text().catch(() => "");
-      try {
-        data = rawText ? JSON.parse(rawText) : null;
-      } catch (jsonErr) {
-        if (!rawText || res.status === 502 || res.status === 504) {
-          throw new Error("Server was restarting or waking up. Please ask again.");
+      let data = null;
+      if (rawText) {
+        try {
+          data = JSON.parse(rawText);
+        } catch (jsonErr) {
+          // Plain text response from server or proxy
         }
-        throw new Error(rawText.slice(0, 100));
       }
 
       removeTypingIndicator(typingId);
 
-      if (data && data.success) {
+      if (res.ok && data && data.success) {
         appendMessageToDom("assistant", data.answer, data.sources || [], data.provider);
         session.messages.push({
           role: "assistant",
@@ -588,14 +587,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         saveSessionsToStorage();
       } else {
-        const errMsg = `⚠️ **Notice:** ${(data && data.error) || "Unable to retrieve information. Please try again."}`;
+        let errorMsg = "Unable to retrieve information. Please wait a few seconds and try again.";
+        if (data && data.error) {
+          errorMsg = data.error;
+        } else if (res.status === 502 || res.status === 503 || res.status === 504 || !rawText) {
+          errorMsg = "Render web service is currently finishing deployment or waking up from sleep. Please retry in 10-15 seconds.";
+        }
+        const errMsg = `⚠️ **Notice:** ${errorMsg}`;
         appendMessageToDom("assistant", errMsg);
         session.messages.push({ role: "assistant", text: errMsg, sources: [], provider: "" });
         saveSessionsToStorage();
       }
     } catch (err) {
       removeTypingIndicator(typingId);
-      const netMsg = `⚠️ ${err.message || "Connection interrupted. Please ask your question again."}`;
+      const netMsg = `⚠️ **Connection Note:** ${err.message || "Could not reach server. Please try again."}`;
       appendMessageToDom("assistant", netMsg);
       session.messages.push({ role: "assistant", text: netMsg, sources: [], provider: "" });
       saveSessionsToStorage();
