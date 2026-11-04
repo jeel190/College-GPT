@@ -431,8 +431,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Chat Messaging & Targeted RAG Inference
   // ========================================================================
   function adjustTextareaHeight() {
-    composerInput.style.height = "auto";
-    composerInput.style.height = Math.min(composerInput.scrollHeight, 140) + "px";
+    if (composerInput && composerInput.tagName === "TEXTAREA") {
+      composerInput.style.height = "auto";
+      composerInput.style.height = Math.min(composerInput.scrollHeight, 140) + "px";
+    }
   }
 
   if (composerInput) {

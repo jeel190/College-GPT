@@ -113,13 +113,13 @@
             <label for="fileInput" class="btn-attach" id="attachBtn" title="Attach College PDF or Word Doc (.pdf, .docx, .doc)">
               📎
             </label>
-            <textarea
+            <input
+              type="text"
               id="composerInput"
               class="composer-input"
-              name="q"
+              name="search_query"
               role="searchbox"
               aria-autocomplete="none"
-              rows="1"
               placeholder="Ask College GPT anything about syllabus, attendance, timetable..."
               spellcheck="false"
               autocomplete="off"
@@ -132,7 +132,7 @@
               data-gramm_editor="false"
               data-enable-grammarly="false"
               required
-            ></textarea>
+            />
             <button type="submit" class="btn-send" id="sendBtn" title="Send message">
               ↑
             </button>

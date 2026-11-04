@@ -163,10 +163,7 @@ class CollegeLLMClient:
         attendance rule, or specific module) across all chunks without showing filenames.
         """
         if not chunks:
-            return (
-                "**No matching information found.**\n\n"
-                "I couldn't locate relevant sections in your currently indexed college documents for this inquiry."
-            )
+            return "I do not have information regarding the question asked in the college documents."
 
         q_lower = question.lower()
         days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -201,7 +198,7 @@ class CollegeLLMClient:
 
         # 2. Specific topic matching: search lines across ALL retrieved chunks
         stop_words = {"what", "is", "the", "are", "of", "in", "for", "a", "an", "and", "or", "to", "how", "do", "does", "can", "tell", "me", "give", "show", "plan", "work"}
-        q_raw_words = [w for w in re.findall(r"\w+", q_lower) if w not in stop_words]
+        q_raw_words = [w for w in re.findall(r"\w+", q_lower) if w not in stop_words and len(w) > 1]
 
         # Expand with typo map
         q_words = set(q_raw_words)
@@ -229,6 +226,5 @@ class CollegeLLMClient:
             bullets = "\n".join(f"* {sub}" for sub in subtopics) if subtopics else ""
             return f"### **{header}**\n\n{bullets}\n"
 
-        # Fallback to concise snippet of first chunk without file titles
-        first_text = chunks[0].get("text", "")[:280].strip() + "..."
-        return f"{first_text}\n"
+        # Fallback when no relevant topics match in offline mode
+        return "I do not have information regarding the question asked in the college documents."

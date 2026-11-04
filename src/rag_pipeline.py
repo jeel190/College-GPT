@@ -141,10 +141,7 @@ class CollegeRAGPipeline:
 
         if not retrieved_chunks:
             return {
-                "answer": (
-                    "I couldn't find relevant information in the currently indexed college documents.\n\n"
-                    "**Tip:** Make sure documents are uploaded and indexed, or check with the college academic office."
-                ),
+                "answer": "I do not have information regarding the question asked in the college documents.",
                 "sources": [],
                 "provider": "None",
                 "chunks_retrieved": 0
