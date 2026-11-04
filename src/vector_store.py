@@ -9,20 +9,32 @@ from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_PERSIST_DIR = os.path.join(BASE_DIR, "chroma_db")
+IS_VERCEL = os.getenv("VERCEL") == "1" or os.path.exists("/var/task")
+
+if IS_VERCEL:
+    DEFAULT_PERSIST_DIR = "/tmp/chroma_db"
+else:
+    DEFAULT_PERSIST_DIR = os.path.join(BASE_DIR, "chroma_db")
+
 COLLECTION_NAME = "college_gpt_knowledge"
 
-# Keep ONNX model cache inside repository directory so Render builds retain it
+# Keep ONNX model cache in /tmp on Vercel, or inside repository directory on Render/local
 try:
     from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
-    ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+    if IS_VERCEL:
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = "/tmp/chroma_models/all-MiniLM-L6-v2"
+    else:
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
 except Exception:
     pass
 
 class CollegeVectorStore:
     def __init__(self, persist_dir: str = DEFAULT_PERSIST_DIR):
         self.persist_dir = persist_dir
-        os.makedirs(self.persist_dir, exist_ok=True)
+        try:
+            os.makedirs(self.persist_dir, exist_ok=True)
+        except OSError:
+            pass
         
         # Initialize Persistent Chroma Client
         self.client = chromadb.PersistentClient(

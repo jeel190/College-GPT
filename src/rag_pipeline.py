@@ -38,11 +38,31 @@ class CollegeRAGPipeline:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.base_dir = base_dir
         self.inbuilt_dir = os.path.join(self.base_dir, "data", "inbuilt")
-        self.uploads_dir = os.path.join(self.base_dir, "data", "uploads")
-        self.persist_dir = os.path.join(self.base_dir, "chroma_db")
 
-        os.makedirs(self.inbuilt_dir, exist_ok=True)
-        os.makedirs(self.uploads_dir, exist_ok=True)
+        is_vercel = os.getenv("VERCEL") == "1" or os.path.exists("/var/task")
+        if is_vercel:
+            self.persist_dir = "/tmp/chroma_db"
+            self.uploads_dir = "/tmp/uploads"
+            # In Vercel serverless, copy pre-indexed ChromaDB to writable /tmp
+            bundled_db = os.path.join(self.base_dir, "chroma_db")
+            if not os.path.exists(self.persist_dir) and os.path.exists(bundled_db):
+                try:
+                    import shutil
+                    shutil.copytree(bundled_db, self.persist_dir, dirs_exist_ok=True)
+                except Exception as e:
+                    print(f"[College GPT] Vercel /tmp chroma copy: {e}")
+        else:
+            self.persist_dir = os.path.join(self.base_dir, "chroma_db")
+            self.uploads_dir = os.path.join(self.base_dir, "data", "uploads")
+
+        try:
+            os.makedirs(self.inbuilt_dir, exist_ok=True)
+        except OSError:
+            pass
+        try:
+            os.makedirs(self.uploads_dir, exist_ok=True)
+        except OSError:
+            pass
 
         self.vector_store = CollegeVectorStore(persist_dir=self.persist_dir)
         self.llm_client = CollegeLLMClient()
