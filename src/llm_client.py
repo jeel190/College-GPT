@@ -132,13 +132,15 @@ class CollegeLLMClient:
                     }
                 ],
                 "generationConfig": {
-                    "temperature": 0.1,  # Deterministic, factual accuracy
-                    "maxOutputTokens": 800
+                    "temperature": 0.0,  # Greedy decoding for ultra-fast, deterministic accuracy
+                    "maxOutputTokens": 500,
+                    "topK": 20,
+                    "topP": 0.9
                 }
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=7)
+                resp = requests.post(url, json=payload, timeout=5)
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])
@@ -146,14 +148,16 @@ class CollegeLLMClient:
                         parts = candidates[0]["content"].get("parts", [])
                         if parts and "text" in parts[0]:
                             return parts[0]["text"].strip()
+                elif resp.status_code == 429:
+                    # Free tier quota exceeded on key; fail fast to offline extractor without looping
+                    raise Exception("HTTP 429: Quota exceeded on Google AI Studio.")
+                elif resp.status_code in (400, 403):
+                    raise Exception(f"HTTP {resp.status_code}: {resp.text[:200]}")
                 else:
-                    err_text = resp.text[:200]
-                    last_error = f"HTTP {resp.status_code}: {err_text}"
-                    if resp.status_code in (400, 403):
-                        raise Exception(last_error)
+                    last_error = f"HTTP {resp.status_code}: {resp.text[:150]}"
             except Exception as e:
                 last_error = str(e)
-                if "400" in last_error or "403" in last_error or "API_KEY_INVALID" in last_error:
+                if "400" in last_error or "403" in last_error or "429" in last_error or "API_KEY_INVALID" in last_error:
                     raise
 
         raise Exception(f"Google AI Studio request failed across models: {last_error}")
@@ -216,7 +220,8 @@ class CollegeLLMClient:
         if not q_words:
             return "I do not have information regarding the question asked in the college documents."
 
-        matched_lines = []
+        best_match_count = 0
+        best_matched_lines = []
         for chunk in chunks:
             text = chunk.get("text", "")
             lines = [l.strip() for l in text.split("\n") if l.strip()]
@@ -224,15 +229,17 @@ class CollegeLLMClient:
                 line_lower = line.lower()
                 # Strict whole word match using word boundaries
                 match_count = sum(1 for qw in q_words if re.search(rf"\b{re.escape(qw)}\b", line_lower))
-                if match_count > 0:
-                    matched_lines = lines[i : min(i + 5, len(lines))]
-                    break
-            if matched_lines:
+                if match_count > best_match_count:
+                    best_match_count = match_count
+                    best_matched_lines = lines[i : min(i + 5, len(lines))]
+                    if best_match_count >= len(q_words):
+                        break
+            if best_match_count >= len(q_words):
                 break
 
-        if matched_lines:
-            header = matched_lines[0]
-            subtopics = matched_lines[1:]
+        if best_matched_lines and best_match_count > 0:
+            header = best_matched_lines[0]
+            subtopics = best_matched_lines[1:]
             bullets = "\n".join(f"* {sub}" for sub in subtopics) if subtopics else ""
             return f"### **{header}**\n\n{bullets}\n"
 

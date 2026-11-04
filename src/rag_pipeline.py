@@ -112,7 +112,7 @@ class CollegeRAGPipeline:
 
         return deleted_count > 0
 
-    def query(self, question: str, n_results: int = 5, provider: Optional[str] = None) -> Dict[str, Any]:
+    def query(self, question: str, n_results: int = 4, provider: Optional[str] = None) -> Dict[str, Any]:
         """
         Complete RAG inference cycle:
         1. Retrieve top-k semantic matches
