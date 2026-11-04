@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College GPT — Intelligent Campus Knowledge Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- ====================================================================
+         Left Sidebar: Minimalist & Clean (Chat History + Vector Store + Chunks)
+         ==================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-wrapper">
+          <div class="brand-icon-box">🎓</div>
+          <div class="brand-titles">
+            <h2>College GPT</h2>
+            <span class="brand-badge">Capstone RAG System</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- New Chat Primary Button -->
+        <button class="btn-new-chat" id="newChatBtn">
+          <span>+</span> New Conversation
+        </button>
+
+        <!-- Browser-Stored Chat History Section -->
+        <div class="section-header">
+          <span class="section-title">Chat History</span>
+          <span class="section-counter" id="historyCounter">0</span>
+        </div>
+        <div class="history-list" id="chatHistoryList">
+          <!-- Populated from localStorage -->
+        </div>
+
+        <!-- Clean Pipeline Status (Only Vector Store & Total Chunks) -->
+        <div class="telemetry-card" style="margin-top: auto;">
+          <div class="telemetry-row">
+            <span class="telemetry-label">Vector Store</span>
+            <span class="telemetry-value online">
+              <span class="pulse-dot"></span> ChromaDB Active
+            </span>
+          </div>
+          <div class="telemetry-row">
+            <span class="telemetry-label">Total Chunks</span>
+            <span class="telemetry-value" id="totalChunks">0</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         Main Workspace: Clean Chat Stream & Composer
+         ==================================================================== -->
+    <main class="workspace">
+      <!-- Minimalist Top Bar: Clean with Theme Toggle Only -->
+      <header class="workspace-header">
+        <div class="header-left">
+          <!-- Minimal clean spacing -->
+        </div>
+        <div class="header-actions">
+          <button class="btn-icon" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+            ☀️
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat Stream -->
+      <div class="chat-container" id="chatContainer">
+        <!-- Minimal Welcome Hero -->
+        <div class="welcome-hero" id="welcomeHero">
+          <div class="welcome-logo-icon">✦</div>
+          <h2>Welcome to College GPT</h2>
+
+          <div class="suggestion-grid">
+            <div class="suggestion-card" data-question="What is the timetable for Tuesday?">
+              <span class="chip-icon">📅</span>
+              <span class="chip-text">What is the timetable for Tuesday?</span>
+            </div>
+            <div class="suggestion-card" data-question="What is the mandatory attendance requirement?">
+              <span class="chip-icon">📊</span>
+              <span class="chip-text">What is the mandatory attendance requirement?</span>
+            </div>
+            <div class="suggestion-card" data-question="What subjects and labs are scheduled for Semester V?">
+              <span class="chip-icon">📚</span>
+              <span class="chip-text">What subjects & labs are in Semester V?</span>
+            </div>
+            <div class="suggestion-card" data-question="What are the campus library timings and rules?">
+              <span class="chip-icon">📖</span>
+              <span class="chip-text">What are the campus library timings & rules?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer Bar with Attach Option & Document Preview Card -->
+      <div class="composer-area">
+        <form class="composer-box" id="composerForm" autocomplete="off">
+          <!-- Attachment Tray (Shown above text input like ChatGPT) -->
+          <div class="composer-attachment-tray" id="composerAttachmentTray">
+            <!-- Populated dynamically when documents are attached -->
+          </div>
+
+          <div class="composer-input-row">
+            <label for="fileInput" class="btn-attach" id="attachBtn" title="Attach College PDF or Word Doc (.pdf, .docx, .doc)">
+              📎
+            </label>
+            <textarea
+              id="composerInput"
+              class="composer-input"
+              name="q"
+              role="searchbox"
+              aria-autocomplete="none"
+              rows="1"
+              placeholder="Ask College GPT anything about syllabus, attendance, timetable..."
+              spellcheck="false"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              data-ms-editor="false"
+              data-copilot="false"
+              data-edge-copilot="false"
+              data-gramm="false"
+              data-gramm_editor="false"
+              data-enable-grammarly="false"
+              required
+            ></textarea>
+            <button type="submit" class="btn-send" id="sendBtn" title="Send message">
+              ↑
+            </button>
+          </div>
+        </form>
+        <div class="composer-disclaimer">
+          College GPT grounds responses strictly in indexed academic documents. Verify official notifications with your college office.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Hidden Universal File Picker for PDF and Word Documents -->
+  <input type="file" id="fileInput" class="hidden-input" accept=".pdf,.docx,.doc">
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

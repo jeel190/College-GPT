@@ -1,0 +1,28 @@
+# Sensitive environment keys
+.env
+.env.local
+*.env
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Local ChromaDB Vector Store
+chroma_db/
+
+# Uploads directory contents (keeps the folder with .gitkeep)
+data/uploads/*
+!data/uploads/.gitkeep
