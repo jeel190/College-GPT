@@ -56,7 +56,7 @@ class CollegeLLMClient:
                         pass
 
         self.gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
-        self.model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+        self.model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview").strip()
 
     def get_active_provider(self) -> str:
         """Returns current status of Google AI Studio provider."""
@@ -108,15 +108,12 @@ class CollegeLLMClient:
         """Call to Google AI Studio Generative Language REST API using requests with multi-model fallback."""
         models_to_try = [
             self.model,
-            "gemini-3.5-flash-lite",
-            "gemini-3.1-flash-lite",
-            "gemini-flash-lite-latest",
-            "gemini-3.5-flash",
-            "gemini-3.6-flash",
-            "gemini-3.8-flash",
+            "gemini-3-flash-preview",
+            "gemini-3.1-flash-lite-preview",
             "gemini-flash-latest"
         ]
-        unique_models = list(dict.fromkeys(m for m in models_to_try if m))
+        # Try at most 2 distinct models to ensure ultra-fast response without blocking
+        unique_models = list(dict.fromkeys(m for m in models_to_try if m))[:2]
 
         last_error = None
         for m in unique_models:
@@ -132,15 +129,15 @@ class CollegeLLMClient:
                     }
                 ],
                 "generationConfig": {
-                    "temperature": 0.0,  # Greedy decoding for ultra-fast, deterministic accuracy
-                    "maxOutputTokens": 500,
+                    "temperature": 0.1,  # Balanced fast & accurate inference
+                    "maxOutputTokens": 600,
                     "topK": 20,
                     "topP": 0.9
                 }
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=5)
+                resp = requests.post(url, json=payload, timeout=6)
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])

@@ -23,3 +23,6 @@ Thumbs.db
 # Uploads directory contents (keeps the folder with .gitkeep)
 data/uploads/*
 !data/uploads/.gitkeep
+
+# Render build-time model download directory
+chroma_models/

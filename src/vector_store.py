@@ -8,8 +8,16 @@ import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Any, Optional
 
-DEFAULT_PERSIST_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chroma_db")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_PERSIST_DIR = os.path.join(BASE_DIR, "chroma_db")
 COLLECTION_NAME = "college_gpt_knowledge"
+
+# Keep ONNX model cache inside repository directory so Render builds retain it
+try:
+    from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
+    ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+except Exception:
+    pass
 
 class CollegeVectorStore:
     def __init__(self, persist_dir: str = DEFAULT_PERSIST_DIR):
@@ -49,8 +57,8 @@ class CollegeVectorStore:
             metadatas.append(meta)
 
         # Chroma upsert ensures idempotency
-        # Batch in chunks of 50 for low-memory, high-speed execution
-        batch_size = 50
+        # Batch in chunks of 15 for ultra-low memory, cloud-safe execution
+        batch_size = 15
         for i in range(0, len(ids), batch_size):
             end = i + batch_size
             self.collection.upsert(

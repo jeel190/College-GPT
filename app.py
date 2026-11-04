@@ -5,15 +5,30 @@ Flask Application Server with REST API & Capstone RAG Pipeline.
 
 import os
 import sys
-from flask import Flask, render_template, request, jsonify
-from werkzeug.utils import secure_filename
-from dotenv import load_dotenv
+
+# Restrict threading for numerical libraries to stay strictly within 512MB RAM on Render
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 # Ensure root directory is in sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(BASE_DIR)
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
+# Configure Chroma ONNX models directory to stay inside the project directory for persistent caching
+try:
+    from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
+    ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+except Exception:
+    pass
+
+from flask import Flask, render_template, request, jsonify
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 
 # Load environment from both CollegeGPT and parent Gen Ai
 load_dotenv(os.path.join(PARENT_DIR, ".env"), override=False)
