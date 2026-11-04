@@ -1,24 +1,33 @@
-# 🎓 College GPT — Academic Knowledge Assistant
+# 🎓 College GPT — AI Campus Knowledge Assistant
 
-> An intelligent, AI-powered Retrieval-Augmented Generation (RAG) assistant designed for college students and faculty.  
-> Powered by **Google AI Studio (Gemini)** with fast local vector search and zero-cost browser chat history.
+> **Production-Grade Academic RAG System Deployed on Render Cloud**  
+> Powered by **Google AI Studio (Gemini)** with high-speed ChromaDB vector search and zero-cost browser storage.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/web/new)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Framework-Flask-black.svg)](https://flask.palletsprojects.com/)
+[![Vector DB](https://img.shields.io/badge/Vector_DB-ChromaDB-emerald.svg)](https://www.trychroma.com/)
+[![AI Engine](https://img.shields.io/badge/AI_Engine-Google_AI_Studio_(Gemini)-orange.svg)](https://aistudio.google.com/)
+[![Hosted on](https://img.shields.io/badge/Hosted_on-Render_Cloud-46E3B7.svg)](https://render.com/)
 
 ---
 
 ## 📌 Overview
 
-**College GPT** solves information fragmentation in academic institutions. Instead of manually searching through lengthy syllabus PDFs, circulars, or timetable spreadsheets, students and faculty can ask direct questions and receive fast, accurate answers.
+**College GPT** is an intelligent, context-grounded AI knowledge assistant built for university campuses. Instead of navigating complicated portals or reading through hundreds of pages of academic notices, course outlines, and schedules, students and faculty can query the system online and receive immediate, targeted, and verified answers.
+
+The system is deployed as a live cloud service on **Render**, backed by Google AI Studio's Gemini models for sub-second grounded inference.
 
 ### ✨ Key Capabilities
 
-- **🎯 Targeted Answers**: Extracts and presents strictly what was asked (e.g., asking for Tuesday's timetable returns only Tuesday's schedule).
-- **🔤 Typo & Spelling Tolerance**: Understands student shorthand and spelling variations (e.g., `jango` $\rightarrow$ `Django`, `postgre` $\rightarrow$ `PostgreSQL`, `timetbl` $\rightarrow$ `timetable`).
-- **🛡️ Out-of-Syllabus Grounding**: If a question is outside the course documents or campus notices, it cleanly clarifies:
+- **🎯 Targeted Precision Answers**: Delivers strictly what was requested (e.g., asking for Tuesday's timetable outputs only Tuesday's schedule, leaving out unrelated days).
+- **🔤 Typo & Shorthand Tolerance**: Intelligently understands student typos and informal course abbreviations (e.g., `jango` $\rightarrow$ `Django`, `postgre` $\rightarrow$ `PostgreSQL`, `timetbl` $\rightarrow$ `timetable`).
+- **🛡️ Strict Out-of-Syllabus Grounding**: If an inquiry falls outside the indexed curriculum or documents, the system cleanly returns:
   > *"I do not have information regarding the question asked in the college documents."*
-- **📎 In-Chat Document Upload**: Attach departmental PDFs and Word documents (`.pdf`, `.docx`, `.doc`) directly at the chat bar. Newly uploaded files are parsed, chunked, and indexed into the vector store in real time.
-- **💬 Browser-Stored Chat History**: Conversations are saved locally in the browser (`localStorage`), allowing you to review past chats without external database or cloud storage costs.
-- **⚡ Local Dense Vector Search**: High-performance semantic retrieval using ChromaDB and ONNX embeddings (`all-MiniLM-L6-v2`).
-- **🤖 Powered by Google AI Studio**: Backed by Google's Gemini models for rapid, context-grounded reasoning.
+- **📎 In-Chat & Drag-and-Drop Document Ingestion**: Attach new departmental PDFs and Word documents (`.pdf`, `.docx`, `.doc`) directly at the chat bar. Documents are processed, chunked, and vector-indexed in real time.
+- **💬 Zero-Cost Browser Chat History**: Complete conversation logs are saved locally in the client's browser (`localStorage`), eliminating the need for expensive external database subscriptions.
+- **⚡ Local Dense Vector Search**: High-performance semantic similarity matching using ChromaDB and ONNX embeddings (`all-MiniLM-L6-v2`).
+- **🚀 Ultra-Fast Inference**: Configured with greedy decoding (`temperature: 0.0`) and extended 120-second connection keep-alive for reliable cloud operation.
 
 ---
 
@@ -43,75 +52,92 @@ flowchart LR
 
 ```text
 CollegeGPT/
-├── app.py                      # Flask application and REST endpoints
-├── run_college_gpt.bat         # 1-Click launcher for Windows
-├── open_env.bat                # Quick shortcut to configure .env
-├── requirements.txt            # Python dependencies
-├── Procfile                    # Render process file
-├── render.yaml                 # Render deployment blueprint
-├── .env.example                # Sample environment variables
+├── app.py                      # Production Flask application & REST endpoints
+├── Procfile                    # Render Gunicorn WSGI process configuration
+├── render.yaml                 # Render cloud deployment blueprint
+├── requirements.txt            # Production Python dependencies
+├── runtime.txt                 # Pinned Python runtime for cloud builds
+├── .env.example                # Template for cloud environment variables
 ├── data/
-│   ├── inbuilt/                # Default academic curriculum & policies
-│   └── uploads/                # User-attached PDFs and Word files
+│   ├── inbuilt/                # Default institutional documents & syllabi
+│   │   ├── 01_BCA_Third_Year_Course_Outline.pdf
+│   │   ├── 02_BCA_Third_Year_Weekly_Timetable.pdf
+│   │   ├── 03_BCA_Third_Year_Exam_Schedule_Planner.pdf
+│   │   ├── 04_BCA_Third_Year_Attendance_Policy.pdf
+│   │   ├── 05_College_Hostel_and_Campus_Rules.docx
+│   │   └── Vsem_FullStackDevelopmet.pdf
+│   └── uploads/                # Dynamic user-uploaded documents (.gitkeep)
 ├── chroma_db/                  # Persistent ChromaDB vector database
 ├── src/
-│   ├── document_processor.py   # PDF and Word document extraction
-│   ├── vector_store.py         # ChromaDB indexing & semantic query
-│   ├── llm_client.py           # Google AI Studio Gemini integration
-│   ├── prompt.py               # Grounded academic prompts
-│   └── rag_pipeline.py         # Complete RAG inference workflow
+│   ├── document_processor.py   # Multi-format document parser & text chunker
+│   ├── vector_store.py         # ChromaDB indexing & semantic query engine
+│   ├── llm_client.py           # Google AI Studio Gemini API connector
+│   ├── prompt.py               # Grounded academic system prompt templates
+│   └── rag_pipeline.py         # End-to-end RAG orchestrator & status manager
 ├── static/
 │   ├── css/
-│   │   └── premium.css         # Modern, clean UI styling
+│   │   └── premium.css         # Modern dark/light responsive interface
 │   └── js/
-│       └── app.js              # Real-time chat & local storage history
+│       └── app.js              # Real-time chat, file uploads & browser storage
 └── templates/
-    └── index.html              # Main chat interface
+    └── index.html              # Single-page web application
 ```
 
 ---
 
-## 🚀 Running Locally
+## 🌐 Cloud Deployment (Render)
 
-### Prerequisites
-- Python 3.10 or higher installed on your computer.
+This repository is pre-configured for automated continuous deployment on [Render](https://render.com):
 
-### Quick Start (Windows)
-1. Double-click **`run_college_gpt.bat`** (or run `python app.py` in your terminal).
-2. Open your web browser and navigate to:
-   ```
-   http://localhost:8080
-   ```
+1. **Link Repository**: Connect `https://github.com/jeel190/College-GPT` to a new **Web Service** on Render.
+2. **Auto-Configuration**: Render automatically detects the configuration from `render.yaml` and `Procfile`:
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn -w 1 --threads 4 --timeout 120 -b 0.0.0.0:$PORT app:app`
+   - **Compute Plan**: `Free` ($0/month)
+3. **Set Environment Variable**:
+   - `GEMINI_API_KEY`: Paste your free key from [Google AI Studio](https://aistudio.google.com/app/apikey).
+4. **Deploy**: Click **Create Web Service**. Your application is instantly hosted live on your custom `*.onrender.com` URL.
 
-### Configuring Google AI Studio API Key
-1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
-2. Open `.env` (or double-click `open_env.bat`) and paste your key:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-3. Save the file. The server automatically detects your key without restarting.
+> [!NOTE]
+> Every subsequent `git push origin main` triggers an automatic, zero-downtime redeployment on Render.
 
 ---
 
-## ☁️ Deployment on Render
+## 💻 Optional: Local Testing
 
-This project is pre-configured for simple hosting on [Render](https://render.com):
+To test or develop locally on your machine:
 
-1. Push your code to your GitHub repository:
+1. **Install Dependencies**:
    ```bash
-   git push origin main
+   pip install -r requirements.txt
    ```
-2. Log in to your [Render Dashboard](https://dashboard.render.com/).
-3. Click **New +** $\rightarrow$ **Web Service** and connect your `College-GPT` repository.
-4. Render will automatically detect the project configuration from `render.yaml` and `Procfile`:
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn -w 1 --threads 4 -b 0.0.0.0:$PORT app:app`
-5. Under **Environment Variables**, add:
-   - `GEMINI_API_KEY` = *(your Google AI Studio API key)*
-6. Click **Deploy Web Service**. Your College GPT instance will be live on the web!
+2. **Add API Key**:
+   Create a `.env` file in the root directory:
+   ```env
+   GEMINI_API_KEY=your_google_ai_studio_api_key_here
+   ```
+3. **Start Server**:
+   ```bash
+   python app.py
+   ```
+   Open `http://localhost:8080` in your web browser.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Cloud Hosting** | **Render** | Zero-configuration web service deployment & auto-rebuilds |
+| **LLM Engine** | **Google AI Studio (Gemini)** | Context-grounded inference with greedy deterministic decoding |
+| **Vector Store** | **ChromaDB** | High-speed local embeddings index & cosine similarity search |
+| **Embeddings** | **ONNX all-MiniLM-L6-v2** | 384-dimensional dense semantic representations |
+| **Backend API** | **Flask + Gunicorn** | Production WSGI application handling concurrent queries |
+| **Frontend UI** | **Vanilla JS + Modern CSS** | Clean glassmorphic UI with zero external runtime dependencies |
+| **Client Storage** | **Browser localStorage** | Persistent conversation history with zero database hosting fees |
 
 ---
 
 ## 📄 License
-This project is open-source and created for academic and research purposes.
+This project is open-source and created for academic, capstone, and research purposes.
