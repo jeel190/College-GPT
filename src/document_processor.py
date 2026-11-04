@@ -36,7 +36,7 @@ def extract_text_from_pdf(file_path: str) -> List[Dict[str, Any]]:
 
     try:
         with open(file_path, "rb") as f:
-            reader = pypdf.PdfReader(f)
+            reader = pypdf.PdfReader(f, strict=False)
             total_pages = len(reader.pages)
             if total_pages == 0:
                 raise ValueError(f"The PDF '{filename}' contains 0 pages.")
@@ -71,6 +71,20 @@ def extract_text_from_pdf(file_path: str) -> List[Dict[str, Any]]:
     return pages_data
 
 
+def extract_text_from_legacy_doc(file_path: str) -> str:
+    """Fallback text extractor for legacy binary .doc files."""
+    try:
+        with open(file_path, "rb") as f:
+            content = f.read()
+        # Extract ASCII strings of length 4 or more
+        chunks = re.findall(rb"[\x20-\x7E\t\n\r]{4,}", content)
+        decoded = [c.decode("latin-1", errors="ignore").strip() for c in chunks]
+        filtered = [s for s in decoded if len(s) > 3 and not s.startswith("Microsoft")]
+        return "\n\n".join(filtered) if len(filtered) > 2 else ""
+    except Exception:
+        return ""
+
+
 def extract_text_from_docx(file_path: str) -> List[Dict[str, Any]]:
     """
     Extracts text from Word documents (.docx).
@@ -87,9 +101,20 @@ def extract_text_from_docx(file_path: str) -> List[Dict[str, Any]]:
     try:
         doc = docx.Document(file_path)
     except Exception as e:
+        # Fallback for legacy binary .doc files
+        legacy_text = extract_text_from_legacy_doc(file_path)
+        if legacy_text:
+            return [{
+                "text": legacy_text,
+                "page": 1,
+                "total_pages": 1,
+                "source": filename,
+                "doc_type": "doc",
+                "file_path": file_path
+            }]
         raise ValueError(
             f"Could not open Word document '{filename}': {str(e)}. "
-            f"Please make sure it is a valid .docx file (or export from Google Docs/Word as .docx or .pdf)."
+            f"Please make sure it is a valid .docx file (or export from Word/Google Docs as .docx or .pdf)."
         )
 
     sections_data = []

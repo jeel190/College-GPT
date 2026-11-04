@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSessionId = null;
   let chatSessions = [];
   let latestUploadedFiles = [];
+  let currentAttachedFile = null;
 
   // Allowed file extensions (strictly PDF & Word Docs)
   const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".doc"];
@@ -130,6 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     chatSessions.unshift(newSession);
     saveSessionsToStorage();
+    currentAttachedFile = null;
     renderWelcomeHero();
     renderHistoryList();
 
@@ -283,10 +285,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (totalChunksEl) totalChunksEl.textContent = data.total_chunks || 0;
     latestUploadedFiles = data.uploaded_files || [];
 
+    if (currentAttachedFile) {
+      renderAttachmentTray([currentAttachedFile]);
+      return;
+    }
+
     // Check if current conversation has already asked questions
     const currentSession = chatSessions.find((s) => s.id === currentSessionId);
     if (!currentSession || !currentSession.messages || currentSession.messages.length === 0) {
-      renderAttachmentTray(latestUploadedFiles);
+      if (latestUploadedFiles.length > 0) {
+        renderAttachmentTray([latestUploadedFiles[latestUploadedFiles.length - 1]]);
+      } else {
+        renderAttachmentTray([]);
+      }
     } else {
       // In-progress conversation: keep chat box clean
       if (composerAttachmentTray) {
@@ -358,7 +369,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (data.success) {
         showToast(`Removed "${filename}"`, "info");
+        if (currentAttachedFile === filename) {
+          currentAttachedFile = null;
+        }
         latestUploadedFiles = latestUploadedFiles.filter((f) => f !== filename);
+        renderAttachmentTray([]);
         fetchSystemStatus();
       } else {
         showToast(data.error || "Failed to remove document.", "error");
@@ -369,26 +384,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ========================================================================
-  // File Upload (PDF & Word Docs ONLY via Composer 📎 Button)
+  // File Upload (PDF & Word Docs via 📎 Button & Drag-and-Drop)
   // ========================================================================
   function validateAndUpload(file) {
     if (!file) return;
 
     if (file.size === 0) {
       showToast(`The file "${file.name}" is empty (0 bytes). Please choose a valid document.`, "error");
-      fileInput.value = "";
+      if (fileInput) fileInput.value = "";
       return;
     }
 
     const ext = "." + file.name.split(".").pop().toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       showToast(`Invalid file type "${ext}"! Only PDF (.pdf) and Word documents (.docx, .doc) are permitted.`, "error");
-      fileInput.value = "";
+      if (fileInput) fileInput.value = "";
       return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
+
+    // Visual loading indicator on attach button
+    if (attachBtn) {
+      attachBtn.textContent = "⏳";
+      attachBtn.style.pointerEvents = "none";
+    }
 
     showToast(`Uploading and indexing "${file.name}"...`, "info");
 
@@ -400,11 +421,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await r.json().catch(() => ({}));
         if (r.ok && data.success) {
           showToast(`✓ ${data.message}`, "success");
+          currentAttachedFile = data.filename;
           if (!latestUploadedFiles.includes(data.filename)) {
             latestUploadedFiles.push(data.filename);
           }
-          // Immediately show the newly attached document in the composer tray!
-          renderAttachmentTray([data.filename]);
+          // Immediately display attached document in the composer tray!
+          renderAttachmentTray([currentAttachedFile]);
           fetchSystemStatus();
         } else {
           showToast(`Upload Error: ${data.error || 'Failed to process document.'}`, "error");
@@ -414,11 +436,27 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(`Upload failed: ${err.message}`, "error");
       })
       .finally(() => {
-        fileInput.value = "";
+        if (fileInput) fileInput.value = "";
+        if (attachBtn) {
+          attachBtn.textContent = "📎";
+          attachBtn.style.pointerEvents = "auto";
+        }
       });
   }
 
-  // Single change event listener on the file input (triggered via chatbox 📎 attach button)
+  // Click handler on attach button (100% reliable trigger)
+  if (attachBtn) {
+    attachBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (fileInput) {
+        fileInput.value = ""; // clear previous path so re-selecting same file works
+        fileInput.click();
+      }
+    });
+  }
+
+  // Change event on file input
   if (fileInput) {
     fileInput.addEventListener("change", (e) => {
       if (e.target.files && e.target.files.length > 0) {
@@ -426,6 +464,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Drag and drop onto composer area & chat container
+  const dropTargets = [composerForm, document.getElementById("chatContainer"), document.body];
+  dropTargets.forEach((zone) => {
+    if (!zone) return;
+    zone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (composerForm) composerForm.classList.add("drag-hover");
+    });
+    zone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (composerForm) composerForm.classList.remove("drag-hover");
+    });
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (composerForm) composerForm.classList.remove("drag-hover");
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        validateAndUpload(e.dataTransfer.files[0]);
+      }
+    });
+  });
 
   // ========================================================================
   // Chat Messaging & Targeted RAG Inference
@@ -464,6 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (welcomeEl) welcomeEl.remove();
 
     // After asking the first question, dismiss attached file chip from chatbox composer
+    currentAttachedFile = null;
     if (composerAttachmentTray) {
       composerAttachmentTray.classList.remove("has-files");
       composerAttachmentTray.innerHTML = "";

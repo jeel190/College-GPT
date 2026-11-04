@@ -148,9 +148,13 @@ def upload_file():
             "error": "The selected file is empty (0 bytes). Please choose a valid document."
         }), 400
 
-    safe_name = secure_filename(file.filename)
-    if not safe_name:
-        safe_name = "uploaded_document" + os.path.splitext(file.filename)[1].lower()
+    import time
+    orig_ext = os.path.splitext(file.filename)[1].lower()
+    raw_base = os.path.splitext(file.filename)[0]
+    safe_base = secure_filename(raw_base)
+    if not safe_base:
+        safe_base = f"doc_{int(time.time())}"
+    safe_name = f"{safe_base}{orig_ext}"
 
     save_path = os.path.join(pipeline.uploads_dir, safe_name)
     try:

@@ -915,8 +915,10 @@ body {
   transition: var(--transition-smooth);
 }
 
-.composer-box:focus-within {
+.composer-box:focus-within,
+.composer-box.drag-hover {
   border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.08);
   box-shadow: 0 10px 35px var(--accent-glow);
 }
 
