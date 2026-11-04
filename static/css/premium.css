@@ -959,6 +959,17 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
+.attached-file-chip.is-uploading {
+  opacity: 0.85;
+  border-color: var(--accent-primary);
+  animation: pulseGlow 1.2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 4px rgba(99, 102, 241, 0.3); }
+  100% { box-shadow: 0 0 14px rgba(99, 102, 241, 0.7); }
+}
+
 /* Document Top Preview Sheet (Matching Miniature Document) */
 .chip-preview-box {
   flex: 1;

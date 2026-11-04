@@ -411,6 +411,23 @@ document.addEventListener("DOMContentLoaded", () => {
       attachBtn.style.pointerEvents = "none";
     }
 
+    // Instant zero-latency placeholder chip in the composer box
+    if (composerAttachmentTray) {
+      composerAttachmentTray.classList.add("has-files");
+      const isWord = file.name.endsWith(".docx") || file.name.endsWith(".doc");
+      composerAttachmentTray.innerHTML = `
+        <div class="attached-file-chip is-uploading" title="Processing ${escapeHtml(file.name)}">
+          <div class="chip-preview-box" style="display:flex; align-items:center; justify-content:center; background:rgba(30,41,59,0.7);">
+            <span style="font-size:1.1rem;">⚡</span>
+          </div>
+          <div class="chip-footer">
+            <span class="chip-badge ${isWord ? 'docx' : 'pdf'}">${isWord ? 'DOCX' : 'PDF'}</span>
+            <span class="chip-title">Indexing...</span>
+          </div>
+        </div>
+      `;
+    }
+
     showToast(`Uploading and indexing "${file.name}"...`, "info");
 
     fetch("/api/upload", {
@@ -430,10 +447,12 @@ document.addEventListener("DOMContentLoaded", () => {
           fetchSystemStatus();
         } else {
           showToast(`Upload Error: ${data.error || 'Failed to process document.'}`, "error");
+          renderAttachmentTray([]);
         }
       })
       .catch((err) => {
         showToast(`Upload failed: ${err.message}`, "error");
+        renderAttachmentTray([]);
       })
       .finally(() => {
         if (fileInput) fileInput.value = "";

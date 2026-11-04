@@ -100,7 +100,7 @@ class CollegeRAGPipeline:
         pages_data = extract_document(file_path)
         if not pages_data:
             return 0
-        chunks = chunk_text(pages_data, chunk_size=750, chunk_overlap=120)
+        chunks = chunk_text(pages_data, chunk_size=900, chunk_overlap=100)
         return self.vector_store.add_chunks(chunks)
 
     def remove_document(self, filename: str) -> bool:

@@ -189,8 +189,8 @@ def extract_document(file_path: str) -> List[Dict[str, Any]]:
 
 def chunk_text(
     pages_data: List[Dict[str, Any]],
-    chunk_size: int = 700,
-    chunk_overlap: int = 120
+    chunk_size: int = 900,
+    chunk_overlap: int = 100
 ) -> List[Dict[str, Any]]:
     """
     Splits document pages/sections into overlapping semantic chunks.

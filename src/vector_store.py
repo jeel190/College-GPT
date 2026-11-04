@@ -49,8 +49,8 @@ class CollegeVectorStore:
             metadatas.append(meta)
 
         # Chroma upsert ensures idempotency
-        # Batch in chunks of 200 for safety
-        batch_size = 200
+        # Batch in chunks of 50 for low-memory, high-speed execution
+        batch_size = 50
         for i in range(0, len(ids), batch_size):
             end = i + batch_size
             self.collection.upsert(
