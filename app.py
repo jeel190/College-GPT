@@ -96,6 +96,7 @@ def is_allowed_file(filename: str) -> bool:
 
 @app.route("/")
 @app.route("/index")
+@app.route("/api/index")
 def index():
     """Renders the College GPT Premium interface."""
     return render_template("index.html")
