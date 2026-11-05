@@ -103,10 +103,7 @@ class CollegeLLMClient:
                     ), "Google AI Studio (Key Error)"
 
         # 2. Targeted Offline Extractor Fallback
-        offline_ans = self._targeted_offline_extract(question, retrieved_chunks)
-        if hasattr(self, '_last_err') and self._last_err:
-            return f"{offline_ans}\n\n<!-- Studio Note: {self._last_err} -->", "Offline Extractor"
-        return offline_ans, "Offline Extractor"
+        return self._targeted_offline_extract(question, retrieved_chunks), "Offline Extractor"
 
     def _call_google_ai_studio(self, system_content: str, user_content: str) -> str:
         """Call to Google AI Studio Generative Language REST API using requests with multi-model fallback."""
