@@ -9,6 +9,10 @@
     "api/index.py": {
       "includeFiles": "{templates/**,static/**,data/**,chroma_db/**}",
       "maxDuration": 60
+    },
+    "app.py": {
+      "includeFiles": "{templates/**,static/**,data/**,chroma_db/**}",
+      "maxDuration": 60
     }
   }
 }

@@ -40,6 +40,8 @@ load_dotenv(os.path.join(BASE_DIR, ".env"), override=True)
 
 from src.rag_pipeline import CollegeRAGPipeline
 
+import urllib.parse
+
 app = Flask(
     __name__,
     template_folder=os.path.join(BASE_DIR, "templates"),
@@ -47,6 +49,45 @@ app = Flask(
 )
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024  # 32MB max file upload
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".doc"}
+
+class VercelPathFixMiddleware:
+    """Restores the original requested URL from Vercel rewrite parameters or proxy headers."""
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        qs = environ.get("QUERY_STRING", "")
+        params = urllib.parse.parse_qs(qs)
+
+        path_val = params.get("path", [""])[0].strip() or params.get("match", [""])[0].strip()
+        if path_val:
+            resolved_path = "/" + path_val.lstrip("/")
+        else:
+            orig = (
+                environ.get("HTTP_X_FORWARDED_URI") or
+                environ.get("HTTP_X_MATCHED_PATH") or
+                environ.get("RAW_URI") or
+                environ.get("REQUEST_URI") or
+                environ.get("PATH_INFO") or
+                "/"
+            ).split("?")[0]
+            if orig.startswith("/api/index"):
+                rest = orig[len("/api/index"):]
+                resolved_path = rest if rest else "/"
+            elif orig.startswith("/app"):
+                rest = orig[len("/app"):]
+                resolved_path = rest if rest else "/"
+            else:
+                resolved_path = orig
+
+        if not resolved_path:
+            resolved_path = "/"
+
+        environ["PATH_INFO"] = resolved_path
+        environ["SCRIPT_NAME"] = ""
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
 
 # Initialize Pipeline
 pipeline = CollegeRAGPipeline(base_dir=BASE_DIR)
@@ -99,15 +140,6 @@ def is_allowed_file(filename: str) -> bool:
 @app.route("/api/index")
 def index():
     """Renders the College GPT Premium interface."""
-    if request.args.get("debug") == "1":
-        return jsonify({
-            "path": request.path,
-            "environ_path_info": request.environ.get("PATH_INFO"),
-            "environ_script_name": request.environ.get("SCRIPT_NAME"),
-            "environ_query_string": request.environ.get("QUERY_STRING"),
-            "matched_path_header": request.headers.get("x-matched-path"),
-            "all_headers": {k: v for k, v in request.headers.items() if "KEY" not in k and "SECRET" not in k}
-        })
     return render_template("index.html")
 
 
