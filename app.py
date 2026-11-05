@@ -94,9 +94,15 @@ def is_allowed_file(filename: str) -> bool:
 
 
 @app.route("/")
+@app.route("/index")
 def index():
     """Renders the College GPT Premium interface."""
     return render_template("index.html")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
 
 
 @app.route("/api/status", methods=["GET"])
