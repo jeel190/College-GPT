@@ -6,7 +6,7 @@ Flask Application Server with REST API & Capstone RAG Pipeline.
 import os
 import sys
 
-# Restrict threading for numerical libraries to stay strictly within 512MB RAM on Render
+# Cap numerical threads for optimal performance in serverless execution environments
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"

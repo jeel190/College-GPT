@@ -613,7 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data && data.error) {
           errorMsg = data.error;
         } else if (res.status === 502 || res.status === 503 || res.status === 504 || !rawText) {
-          errorMsg = "Render web service is currently finishing deployment or waking up from sleep. Please retry in 10-15 seconds.";
+          errorMsg = "Server is warming up or updating. Please retry in a few seconds.";
         }
         const errMsg = `⚠️ **Notice:** ${errorMsg}`;
         appendMessageToDom("assistant", errMsg);

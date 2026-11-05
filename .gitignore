@@ -20,6 +20,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Vercel Serverless Build & CLI artifacts
+.vercel/
+
 # Uploads directory contents (keeps the folder with .gitkeep)
 data/uploads/*
 !data/uploads/.gitkeep
