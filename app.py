@@ -78,14 +78,15 @@ def reload_env_if_needed():
                 pass
     pipeline.llm_client.load_env()
 
-# Auto-index on initial startup if store is empty
-try:
-    if pipeline.vector_store.collection.count() == 0:
-        print("[College GPT] Empty vector store detected. Initializing inbuilt documents...")
-        res = pipeline.index_all_documents()
-        print(f"[College GPT] Initialized: {res['total_chunks_indexed']} chunks from {res['total_files']} files.")
-except Exception as e:
-    print(f"[College GPT] Startup index warning: {e}")
+# Auto-index on initial startup if store is empty (skip synchronous heavy indexing on Vercel serverless)
+if not IS_VERCEL:
+    try:
+        if pipeline.vector_store.collection.count() == 0:
+            print("[College GPT] Empty vector store detected. Initializing inbuilt documents...")
+            res = pipeline.index_all_documents()
+            print(f"[College GPT] Initialized: {res['total_chunks_indexed']} chunks from {res['total_files']} files.")
+    except Exception as e:
+        print(f"[College GPT] Startup index warning: {e}")
 
 
 def is_allowed_file(filename: str) -> bool:
@@ -304,6 +305,14 @@ def update_settings():
         "message": "Google AI Studio API Key saved successfully.",
         "active_provider": pipeline.llm_client.get_active_provider()
     })
+
+
+@app.errorhandler(500)
+def server_error(e):
+    import traceback
+    err_tb = traceback.format_exc()
+    print(f"[College GPT 500 Error]:\n{err_tb}", flush=True)
+    return f"<h1>Internal Server Error</h1><pre>{err_tb}</pre>", 500
 
 
 if __name__ == "__main__":
