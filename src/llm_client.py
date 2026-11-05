@@ -92,6 +92,7 @@ class CollegeLLMClient:
                 return answer, "Google AI Studio"
             except Exception as e:
                 err_msg = str(e)
+                self._last_err = err_msg
                 print(f"[College GPT] Google AI Studio error: {err_msg}")
                 if "API_KEY_INVALID" in err_msg or "400" in err_msg or "403" in err_msg:
                     return (
@@ -102,7 +103,10 @@ class CollegeLLMClient:
                     ), "Google AI Studio (Key Error)"
 
         # 2. Targeted Offline Extractor Fallback
-        return self._targeted_offline_extract(question, retrieved_chunks), "Offline Extractor"
+        offline_ans = self._targeted_offline_extract(question, retrieved_chunks)
+        if hasattr(self, '_last_err') and self._last_err:
+            return f"{offline_ans}\n\n<!-- Studio Note: {self._last_err} -->", "Offline Extractor"
+        return offline_ans, "Offline Extractor"
 
     def _call_google_ai_studio(self, system_content: str, user_content: str) -> str:
         """Call to Google AI Studio Generative Language REST API using requests with multi-model fallback."""
