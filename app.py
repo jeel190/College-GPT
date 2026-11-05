@@ -99,6 +99,15 @@ def is_allowed_file(filename: str) -> bool:
 @app.route("/api/index")
 def index():
     """Renders the College GPT Premium interface."""
+    if request.args.get("debug") == "1":
+        return jsonify({
+            "path": request.path,
+            "environ_path_info": request.environ.get("PATH_INFO"),
+            "environ_script_name": request.environ.get("SCRIPT_NAME"),
+            "environ_query_string": request.environ.get("QUERY_STRING"),
+            "matched_path_header": request.headers.get("x-matched-path"),
+            "all_headers": {k: v for k, v in request.headers.items() if "KEY" not in k and "SECRET" not in k}
+        })
     return render_template("index.html")
 
 
