@@ -132,10 +132,10 @@ class CollegeRAGPipeline:
 
         return deleted_count > 0
 
-    def query(self, question: str, n_results: int = 4, provider: Optional[str] = None) -> Dict[str, Any]:
+    def query(self, question: str, n_results: int = 8, provider: Optional[str] = None, target_doc: Optional[str] = None) -> Dict[str, Any]:
         """
         Complete RAG inference cycle:
-        1. Retrieve top-k semantic matches
+        1. Retrieve top-k semantic matches (with optional document filtering)
         2. Format source citations
         3. Call LLM for grounded answer
         """
@@ -147,12 +147,25 @@ class CollegeRAGPipeline:
                 "sources": []
             }
 
+        q_lower = clean_q.lower()
+        auto_target = target_doc
+        if not auto_target:
+            # If inquiry is about an uploaded or general pdf/file, auto-target the most recent upload if available
+            if any(w in q_lower for w in ["pdf", "uploaded", "this document", "this file", "the document", "the file", "attached"]):
+                upload_files = [os.path.basename(f) for f in glob.glob(os.path.join(self.uploads_dir, "*.*"))]
+                if upload_files:
+                    auto_target = upload_files[-1]
+
+        # Use 8 chunks normally, or 10 chunks for document summaries and full schedules
+        is_broad_q = any(w in q_lower for w in ["what is", "about", "summary", "summarize", "overview", "cover", "full info", "complete info", "timetable", "schedule"])
+        effective_n = max(n_results, 10 if is_broad_q else 8)
+
         # Check for common typos and merge chunks if normalized query differs
         normalized_q = normalize_query_typos(clean_q)
-        retrieved_chunks = self.vector_store.query(clean_q, n_results=n_results)
+        retrieved_chunks = self.vector_store.query(clean_q, n_results=effective_n, filter_source=auto_target)
 
         if normalized_q.lower() != clean_q.lower():
-            extra_chunks = self.vector_store.query(normalized_q, n_results=n_results)
+            extra_chunks = self.vector_store.query(normalized_q, n_results=effective_n, filter_source=auto_target)
             existing_ids = {c.get("id") for c in retrieved_chunks}
             for ec in extra_chunks:
                 if ec.get("id") not in existing_ids:

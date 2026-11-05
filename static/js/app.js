@@ -544,6 +544,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const welcomeEl = document.getElementById("welcomeHero");
     if (welcomeEl) welcomeEl.remove();
 
+    // Capture any attached file to send with query
+    const targetDoc = currentAttachedFile;
+
     // After asking the first question, dismiss attached file chip from chatbox composer
     currentAttachedFile = null;
     if (composerAttachmentTray) {
@@ -581,7 +584,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
+        body: JSON.stringify({ question: text, target_doc: targetDoc }),
       });
 
       const rawText = await res.text().catch(() => "");
@@ -720,9 +723,8 @@ document.addEventListener("DOMContentLoaded", () => {
     html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
     html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
 
-    // Bold & Italic
+    // Bold
     html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
 
     // Inline Code
     html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -730,13 +732,30 @@ document.addEventListener("DOMContentLoaded", () => {
     // Blockquote
     html = html.replace(/^>\s?(.*$)/gim, "<blockquote>$1</blockquote>");
 
-    // Lists (bullet points)
-    html = html.replace(/^\s*[-*]\s+(.*$)/gim, "<li>$1</li>");
-    html = html.replace(/(<li>.*<\/li>)/gms, "<ul>$1</ul>");
+    // Lists (bullet points): convert lines starting with * or - or • to <li> FIRST
+    html = html.replace(/^\s*[-*•]\s+(.*$)/gim, "<li>$1</li>");
 
-    // Line breaks
-    html = html.replace(/\n\n/g, "</p><p>");
+    // Italic (processed after lists so bullet asterisks are not swallowed as italics)
+    html = html.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+
+    // Group consecutive <li> elements into <ul>
+    html = html.replace(/((?:<li>.*?<\/li>\s*)+)/gis, "<ul>$1</ul>");
+
+    // Clean trailing/leading spaces inside <ul>
+    html = html.replace(/<ul>\s+/gi, "<ul>");
+    html = html.replace(/\s+<\/ul>/gi, "</ul>");
+
+    // Paragraphs & Line breaks
+    html = html.replace(/\n\n+/g, "</p><p>");
     html = html.replace(/\n/g, "<br>");
+
+    // Clean up any awkward nested <p> around block elements
+    html = html.replace(/<p>\s*(<ul>[\s\S]*?<\/ul>)\s*<\/p>/gi, "$1");
+    html = html.replace(/<p>\s*(<h[1-3]>[\s\S]*?<\/h[1-3]>)\s*<\/p>/gi, "$1");
+    html = html.replace(/<p>\s*(<blockquote>[\s\S]*?<\/blockquote>)\s*<\/p>/gi, "$1");
+    html = html.replace(/<br>\s*<\/(ul|ol|p|h1|h2|h3|blockquote)>/gi, "</$1>");
+    html = html.replace(/<(ul|ol|blockquote)>\s*<br>/gi, "<$1>");
+    html = html.replace(/<\/li>\s*<br>/gi, "</li>");
 
     return `<p>${html}</p>`;
   }

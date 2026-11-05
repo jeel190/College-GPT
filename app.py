@@ -172,12 +172,13 @@ def chat():
     payload = request.get_json(silent=True) or request.form
     question = (payload.get("question") or payload.get("msg") or "").strip()
     provider = payload.get("provider")
+    target_doc = (payload.get("target_doc") or payload.get("filename") or "").strip() or None
 
     if not question:
         return jsonify({"success": False, "error": "Please enter a valid question."}), 400
 
     try:
-        response = pipeline.query(question=question, n_results=4, provider=provider)
+        response = pipeline.query(question=question, n_results=8, provider=provider, target_doc=target_doc)
         if "error" in response and not response.get("answer"):
             return jsonify({
                 "success": False,

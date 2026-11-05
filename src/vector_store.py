@@ -84,9 +84,10 @@ class CollegeVectorStore:
 
         return len(chunks)
 
-    def query(self, query_text: str, n_results: int = 5) -> List[Dict[str, Any]]:
+    def query(self, query_text: str, n_results: int = 5, filter_source: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Queries the vector store for top-k semantically relevant chunks.
+        Optionally filters to a specific source document.
         Returns list of dicts with text, metadata, and distance.
         """
         total = self.collection.count()
@@ -94,10 +95,25 @@ class CollegeVectorStore:
             return []
 
         actual_n = min(n_results, total)
-        results = self.collection.query(
-            query_texts=[query_text],
-            n_results=actual_n
-        )
+        query_kwargs = {
+            "query_texts": [query_text],
+            "n_results": actual_n
+        }
+        if filter_source:
+            query_kwargs["where"] = {"source": filter_source}
+
+        try:
+            results = self.collection.query(**query_kwargs)
+            # If filtered query returned 0 documents, fallback to unfiltered
+            if filter_source and (not results or not results.get("documents") or not results["documents"][0]):
+                query_kwargs.pop("where", None)
+                results = self.collection.query(**query_kwargs)
+        except Exception:
+            if filter_source:
+                query_kwargs.pop("where", None)
+                results = self.collection.query(**query_kwargs)
+            else:
+                raise
 
         formatted_results = []
         if results and "documents" in results and results["documents"]:

@@ -118,6 +118,15 @@ class CollegeLLMClient:
         last_error = None
         for m in unique_models:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.gemini_key}"
+            gen_cfg = {
+                "temperature": 0.1,  # Balanced fast & accurate inference
+                "maxOutputTokens": 2500,  # Comprehensive answers without truncation
+                "topK": 20,
+                "topP": 0.9
+            }
+            if "gemini-3" in m or "gemini-2.5" in m:
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
+
             payload = {
                 "systemInstruction": {
                     "parts": [{"text": system_content}]
@@ -128,16 +137,11 @@ class CollegeLLMClient:
                         "parts": [{"text": user_content}]
                     }
                 ],
-                "generationConfig": {
-                    "temperature": 0.1,  # Balanced fast & accurate inference
-                    "maxOutputTokens": 600,
-                    "topK": 20,
-                    "topP": 0.9
-                }
+                "generationConfig": gen_cfg
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=6)
+                resp = requests.post(url, json=payload, timeout=12)
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])
