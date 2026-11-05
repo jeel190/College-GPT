@@ -11,8 +11,8 @@ from app import app
 
 class VercelPathFixMiddleware:
     """
-    Vercel rewrites routes into /api/index?path=$1, which may overwrite PATH_INFO.
-    This WSGI middleware extracts the original intended path from query params or headers.
+    Vercel rewrites routes into /api/index?path=:match*.
+    This WSGI middleware extracts the original intended path and restores PATH_INFO.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
@@ -21,11 +21,10 @@ class VercelPathFixMiddleware:
         qs = environ.get("QUERY_STRING", "")
         params = urllib.parse.parse_qs(qs)
 
-        # 1. Primary: Extract from rewrite parameter path=$1
-        if "path" in params and params["path"]:
-            resolved_path = "/" + params["path"][0].lstrip("/")
+        path_val = params.get("path", [""])[0].strip()
+        if path_val:
+            resolved_path = "/" + path_val.lstrip("/")
         else:
-            # 2. Secondary: Fallback to proxy headers
             orig = (
                 environ.get("HTTP_X_FORWARDED_URI") or
                 environ.get("HTTP_X_MATCHED_PATH") or
