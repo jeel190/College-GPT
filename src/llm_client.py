@@ -141,7 +141,7 @@ class CollegeLLMClient:
             }
 
             try:
-                resp = requests.post(url, json=payload, timeout=12)
+                resp = requests.post(url, json=payload, timeout=25)
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])
@@ -202,7 +202,20 @@ class CollegeLLMClient:
                             f"*Note: This is a sample planning timetable. Verify official period timings with your department.*"
                         )
 
-        # 2. Specific topic matching: search lines across ALL retrieved chunks
+        # 2. Document overview / summary in offline mode
+        if any(w in q_lower for w in ["what is pdf about", "what is the pdf about", "what is this pdf about", "what is pdf", "summarize", "overview", "what does this document cover"]):
+            highlights = []
+            for chunk in chunks:
+                lines = [l.strip() for l in chunk.get("text", "").split("\n") if len(l.strip()) > 15 and not l.strip().startswith("---")]
+                if lines:
+                    for line in lines[:2]:
+                        if not any(line in h for h in highlights):
+                            highlights.append(line)
+            if highlights:
+                bullets = "\n".join(f"* {h}" for h in highlights[:6])
+                return f"### **Document Overview**\n\nThe college documents outline the following key academic subjects and details:\n\n{bullets}\n"
+
+        # 3. Specific topic matching: search lines across ALL retrieved chunks
         stop_words = {
             "what", "is", "the", "are", "of", "in", "for", "a", "an", "and", "or",
             "to", "how", "do", "does", "can", "tell", "me", "give", "show", "plan",
