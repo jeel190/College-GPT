@@ -7,6 +7,14 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
+try:
+    from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
+    bundled_model = os.path.join(ROOT_DIR, "chroma_models", "all-MiniLM-L6-v2")
+    if os.path.exists(os.path.join(bundled_model, "onnx", "model.onnx")):
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = bundled_model
+except Exception:
+    pass
+
 from app import app
 
 class VercelPathFixMiddleware:

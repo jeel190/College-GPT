@@ -19,14 +19,17 @@ PARENT_DIR = os.path.dirname(BASE_DIR)
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-# Configure Chroma ONNX models directory (use /tmp on Vercel serverless, else local repo)
+# Configure Chroma ONNX models directory to bundled model
 IS_VERCEL = os.getenv("VERCEL") == "1" or os.path.exists("/var/task")
 try:
     from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
-    if IS_VERCEL:
+    bundled_model_dir = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+    if os.path.exists(os.path.join(bundled_model_dir, "onnx", "model.onnx")):
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = bundled_model_dir
+    elif IS_VERCEL:
         ONNXMiniLM_L6_V2.DOWNLOAD_PATH = "/tmp/chroma_models/all-MiniLM-L6-v2"
     else:
-        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = bundled_model_dir
 except Exception:
     pass
 

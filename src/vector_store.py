@@ -18,13 +18,16 @@ else:
 
 COLLECTION_NAME = "college_gpt_knowledge"
 
-# Keep ONNX model cache in /tmp on Vercel, or inside repository directory on Render/local
+# Keep ONNX model cache pointed to pre-bundled repository model
 try:
     from chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2 import ONNXMiniLM_L6_V2
-    if IS_VERCEL:
+    bundled_model_dir = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+    if os.path.exists(os.path.join(bundled_model_dir, "onnx", "model.onnx")):
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = bundled_model_dir
+    elif IS_VERCEL:
         ONNXMiniLM_L6_V2.DOWNLOAD_PATH = "/tmp/chroma_models/all-MiniLM-L6-v2"
     else:
-        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = os.path.join(BASE_DIR, "chroma_models", "all-MiniLM-L6-v2")
+        ONNXMiniLM_L6_V2.DOWNLOAD_PATH = bundled_model_dir
 except Exception:
     pass
 

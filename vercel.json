@@ -7,11 +7,11 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": "{templates/**,static/**,data/**,chroma_db/**}",
+      "includeFiles": "{templates/**,static/**,data/**,chroma_db/**,chroma_models/**}",
       "maxDuration": 60
     },
     "app.py": {
-      "includeFiles": "{templates/**,static/**,data/**,chroma_db/**}",
+      "includeFiles": "{templates/**,static/**,data/**,chroma_db/**,chroma_models/**}",
       "maxDuration": 60
     }
   }
